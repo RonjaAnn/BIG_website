@@ -1,0 +1,288 @@
+---
+title: "Creating Interactive Maps with Leaflet"
+author: "Ronja Seitz"
+date: "2025-03-10"
+output: html_document
+
+params:
+  point_data:
+    label: "Input points:"
+    value: "C:/Users/ronja/Documents/EAGLE/Svalbard/larissa_sos/faeces_sampling_2023_2024_all_data_continuously_updated.csv"
+    input: file
+  northing_column:
+    label: "Column with UTM Northing"
+    value: "utm_northing"
+    input: text
+  easting_column:
+    label: "Column with UTM Easting"
+    value: "utm_easting"
+    input: text
+  date_column:
+    label:  "Column with date of observation"
+    value: "date..yyyy.mm.dd."
+    input: text
+  sex_column:
+    label: "Column with reindeer sex"
+    value: "reindeer_sex"
+    input: text
+  age_column:
+    label: "Column with reindeer age"
+    value: "reindeer_age"
+    input: text
+    
+---
+This R markdown script can be used to easily visualise reindeer location data with different levels of informations and effort in creating the map.
+We create interactive maps with the package leaflet (https://doi.org/10.32614/CRAN.package.leaflet).
+
+#### **Install required packages**
+This is only necessary once.
+```{r code to install packages}
+# install.packages("sf")
+# install.packages("leaflet")
+# install.packages("dplyr")
+```
+
+#### **Load required packages**
+```{r setup, message=FALSE, warning=FALSE}
+library(sf) #work with location data like points 
+library(leaflet) #create interactive maps
+library(dplyr) #to clean data
+```
+
+#### **1. Create interactive maps with leaflet**
+Because commonly used base maps like Open Street Map are not optimized for Svalbard we first add base maps from the Norsk Polar institute (https://geodata.npolar.no/) as WMTS (Web Map Tile Services) to the leaflet interface.
+To make different layers accesible we also add the possibility to select which basemap to show.
+
+```{r}
+# Step 1. Define WMTS URLs
+svalbard_basemap_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Basiskart_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
+
+svalbard_satellite_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Satellitt_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Satellitt_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
+
+# Step 2. Create Leaflet map with multiple basemaps and overlays
+topo_map <- leaflet() %>%
+  setView(lng = 15, lat = 78, zoom = 5) %>%  # Center on Svalbard
+  
+  # Add basemap options
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri Satellite") %>%
+  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") %>%
+  addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Light") %>%
+  
+  # Add the Svalbard topogrpahic Basemap WMTS layer
+  addWMSTiles(
+    baseUrl = svalbard_basemap_wmts,
+    layers = "Basisdata_NP_Basiskart_Svalbard_WMTS_3857",
+    options = WMSTileOptions(format = "image/jpgpng", transparent = TRUE),
+    group = "Svalbard Basemap"
+  ) %>%
+  
+  # Add the Svalbard Satellite WMTS layer
+  addWMSTiles(
+    baseUrl = svalbard_satellite_wmts,
+    layers = "Basisdata_NP_Satellitt_Svalbard_WMTS_3857",
+    options = WMSTileOptions(format = "image/jpgpng", transparent = TRUE),
+    group = "Svalbard Satellite"
+  ) %>%
+  
+  # Add layer control to switch between base layers and overlays
+  addLayersControl(
+    baseGroups = c("Esri Satellite", "OpenStreetMap", "CartoDB Light"),
+    overlayGroups = c("Svalbard Basemap", "Svalbard Satellite"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+# Step 3: Plot the map, which was defined in the previous step
+topo_map
+```
+
+Add Reindeer Location Points
+```{r}
+# Step 1: Read the CSV file with the GPS data into R
+data <- read.csv(params$point_data)
+
+# Step 2: Clean up the UTM coordinates using parameter column names
+valid_range <- list(
+  easting = c(400000, 900000),
+  northing = c(6500000, 9500000)
+)
+
+data_clean <- data %>%
+  filter(
+    !is.na(.data[[params$easting_column]]) & 
+    !is.na(.data[[params$northing_column]]) & 
+    .data[[params$easting_column]] >= valid_range$easting[1] & 
+    .data[[params$easting_column]] <= valid_range$easting[2] &
+    .data[[params$northing_column]] >= valid_range$northing[1] & 
+    .data[[params$northing_column]] <= valid_range$northing[2]
+  )
+
+# Step 3: Create an sf object with UTM coordinates (EPSG:25833)
+data_sf <- st_as_sf(data_clean, coords = c(params$easting_column, params$northing_column), crs = 25833)
+
+# Step 4: Reproject the coordinates to EPSG:4326 for use in leaflet
+data_projected <- st_transform(data_sf, crs = 4326)
+
+# Step 5: Extract the longitude and latitude
+lng <- st_coordinates(data_projected)[, 1]
+lat <- st_coordinates(data_projected)[, 2]
+
+# Step 6: Create a copy of the base map
+reindeer_map <- topo_map
+
+# Step 7: Add markers to the Leaflet map
+for (i in 1:length(lng)) {
+  reindeer_map <- reindeer_map %>%
+    addCircleMarkers(
+      lng = lng[i], 
+      lat = lat[i], 
+      radius = 2, 
+      color = "white", 
+      fill = TRUE, 
+      fillColor = "grey", 
+      fillOpacity = 0.7, 
+      opacity = 1,
+      popup = paste(
+        "Infos:", 
+        "\nDate:", data_projected[[params$date_column]][i], 
+        "\nSex:", data_projected[[params$sex_column]][i], 
+        "\nAge:", data_projected[[params$age_column]][i]
+      )
+    )
+}
+
+# Step 8: Plot the map
+reindeer_map
+
+# Create stylish labels with HTML/CSS
+label_text <- lapply(1:nrow(data_projected), function(i) {
+  htmltools::HTML(paste0(
+    "<div style='font-family: Arial, sans-serif; padding: 6px;'>
+       <div style='background-color: #2c3e50; color: white; padding: 4px 8px; 
+                   border-radius: 3px 3px 0 0; font-weight: bold;'>
+         Observation ", i, "
+       </div>
+       <div style='padding: 6px; border: 1px solid #ddd; border-top: none;
+                   border-radius: 0 0 3px 3px; background-color: #f9f9f9;'>
+         <b>Date: </b>", data_projected[[params$date_column]][i], "<br/>
+         <b>Sex: </b>", data_projected[[params$sex_column]][i], "<br/>
+         <b>Age: </b>", data_projected[[params$age_column]][i], "<br/>
+         <b>Coordinates:</b><br/>
+         <span style='font-size: 0.9em; color: #555;'>
+           ", round(lat[i], 4), "°N, ", round(lng[i], 4), "°E
+         </span>
+       </div>
+     </div>"
+  ))
+})
+
+# Define fixed colors for each sex
+sex_colors <- c(
+  "male" = "green",
+  "female" = "yellow",
+  "unknown" = "#95a5a6"
+)
+
+# Create advanced map with sex-based coloring
+advanced_reindeer_markers_map <- topo_map
+
+for (i in 1:length(lng)) {
+  current_sex <- data_projected[[params$sex_column]][i]
+  marker_color <- ifelse(current_sex %in% names(sex_colors),
+                        sex_colors[current_sex],
+                        "#95a5a6")
+  
+  advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%  
+    addCircleMarkers(  
+      lng = lng[i],  
+      lat = lat[i],  
+      radius = 5,  
+      color = "white",          
+      fillColor = marker_color,
+      fillOpacity = 0.8,  
+      weight = 1.5,  
+      popup = label_text[[i]],  
+      label = paste("Observation", i)  
+    )  
+}
+
+# Add legend for sex colors
+advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
+  addLegend(
+    position = "bottomright",
+    colors = sex_colors,
+    labels = names(sex_colors),
+    title = "Reindeer Sex",
+    opacity = 0.8
+  )
+
+# Output the map
+advanced_reindeer_markers_map
+```
+
+```{r}
+# Create stylish labels with HTML/CSS
+label_text <- lapply(1:nrow(data_projected), function(i) {
+  htmltools::HTML(paste0(
+    "<div style='font-family: Arial, sans-serif; padding: 6px;'>
+       <div style='background-color: #2c3e50; color: white; padding: 4px 8px; 
+                   border-radius: 3px 3px 0 0; font-weight: bold;'>
+         Observation ", i, "
+       </div>
+       <div style='padding: 6px; border: 1px solid #ddd; border-top: none;
+                   border-radius: 0 0 3px 3px; background-color: #f9f9f9;'>
+         <b>Date: </b>", data_projected[[params$date_column]][i], "<br/>
+         <b>Sex: </b>", data_projected[[params$sex_column]][i], "<br/>
+         <b>Age: </b>", data_projected[[params$age_column]][i], "<br/>
+         <b>Coordinates:</b><br/>
+         <span style='font-size: 0.9em; color: #555;'>
+           ", round(lat[i], 4), "°N, ", round(lng[i], 4), "°E
+         </span>
+       </div>
+     </div>"
+  ))
+})
+
+# Define fixed colors for each sex
+sex_colors <- c(
+  "male" = "green",
+  "female" = "yellow",
+  "unknown" = "#95a5a6"  # Fixed spelling from "unkown" to "unknown"
+)
+
+# Create advanced map with sex-based coloring
+advanced_reindeer_markers_map <- topo_map
+
+for (i in 1:length(lng)) {
+  current_sex <- data_projected[[params$sex_column]][i]  # Fixed to use params
+  marker_color <- ifelse(current_sex %in% names(sex_colors),
+                        sex_colors[current_sex],
+                        "#95a5a6")
+  
+  advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%  
+    addCircleMarkers(  
+      lng = lng[i],  
+      lat = lat[i],  
+      radius = 5,  
+      color = "white",          
+      fillColor = marker_color,
+      fillOpacity = 0.8,  
+      weight = 1.5,  
+      popup = label_text[[i]],  
+      label = paste("Observation", i)  
+    )  
+}
+
+# Add legend for sex colors
+advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
+  addLegend(
+    position = "bottomright",
+    colors = sex_colors,
+    labels = names(sex_colors),
+    title = "Reindeer Sex",
+    opacity = 0.8
+  )
+
+# Output the map
+advanced_reindeer_markers_map
+```
+

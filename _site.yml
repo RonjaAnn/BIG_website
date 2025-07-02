@@ -9,3 +9,5 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
+    - text: "Leaflet"
+      href: "Vis_Location_Leaflet.html"
