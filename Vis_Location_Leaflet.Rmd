@@ -2,7 +2,10 @@
 title: "Creating Interactive Maps with Leaflet"
 author: "Ronja Seitz"
 date: "2025-03-10"
-output: html_document
+output: 
+  html_document:
+    self_contained: true
+    theme: default
 
 params:
   point_data:
