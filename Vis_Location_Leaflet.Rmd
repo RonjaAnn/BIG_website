@@ -1,7 +1,7 @@
 ---
 title: "Creating Interactive Maps with Leaflet"
 author: "Ronja Seitz"
-date: "2025-03-10"
+date: "2025-07-03"
 output: 
   html_document:
     self_contained: true
@@ -101,7 +101,7 @@ topo_map
 Add Reindeer Location Points
 ```{r}
 # Step 1: Read the CSV file with the GPS data into R
-data <- read.csv(data/BIG_faeces_loc_202406.csv)
+data <- read.csv("data/BIG_faeces_loc_202406.csv")
 
 # Step 2: Clean up the UTM coordinates using parameter column names
 valid_range <- list(
@@ -111,16 +111,16 @@ valid_range <- list(
 
 data_clean <- data %>%
   filter(
-    !is.na(.data[[utm_easting]]) & 
-    !is.na(.data[[utm_northing]]) & 
-    .data[[utm_easting]] >= valid_range$easting[1] & 
-    .data[[utm_easting]] <= valid_range$easting[2] &
-    .data[[utm_northing]] >= valid_range$northing[1] & 
-    .data[[utm_northing]] <= valid_range$northing[2]
+    !is.na(utm_easting) & 
+    !is.na(utm_northing) & 
+    utm_easting >= valid_range$easting[1] & 
+    utm_easting <= valid_range$easting[2] &
+    utm_northing >= valid_range$northing[1] & 
+    utm_northing <= valid_range$northing[2]
   )
 
 # Step 3: Create an sf object with UTM coordinates (EPSG:25833)
-data_sf <- st_as_sf(data_clean, coords = c(utm_easting, utm_northing), crs = 25833)
+data_sf <- st_as_sf(data_clean, coords = c("utm_easting", "utm_northing"), crs = 25833)
 
 # Step 4: Reproject the coordinates to EPSG:4326 for use in leaflet
 data_projected <- st_transform(data_sf, crs = 4326)
@@ -146,9 +146,9 @@ for (i in 1:length(lng)) {
       opacity = 1,
       popup = paste(
         "Infos:", 
-        "\nDate:", data_projected[[date..yyyy.mm.dd.]][i], 
-        "\nSex:", data_projected[[reindeer_sex]][i], 
-        "\nAge:", data_projected[[reindeer_age]][i]
+        "<br>Date:", data_projected[["date..yyyy.mm.dd."]][i], 
+        "<br>Sex:", data_projected[["reindeer_sex"]][i], 
+        "<br>Age:", data_projected[["reindeer_age"]][i]
       )
     )
 }
@@ -166,9 +166,9 @@ label_text <- lapply(1:nrow(data_projected), function(i) {
        </div>
        <div style='padding: 6px; border: 1px solid #ddd; border-top: none;
                    border-radius: 0 0 3px 3px; background-color: #f9f9f9;'>
-         <b>Date: </b>", data_projected[[date..yyyy.mm.dd.]][i], "<br/>
-         <b>Sex: </b>", data_projected[[reindeer_sex]][i], "<br/>
-         <b>Age: </b>", data_projected[[reindeer_age]][i], "<br/>
+         <b>Date: </b>", data_projected[["date..yyyy.mm.dd."]][i], "<br/>
+         <b>Sex: </b>", data_projected[["reindeer_sex"]][i], "<br/>
+         <b>Age: </b>", data_projected[["reindeer_age"]][i], "<br/>
          <b>Coordinates:</b><br/>
          <span style='font-size: 0.9em; color: #555;'>
            ", round(lat[i], 4), "°N, ", round(lng[i], 4), "°E
@@ -189,7 +189,7 @@ sex_colors <- c(
 advanced_reindeer_markers_map <- topo_map
 
 for (i in 1:length(lng)) {
-  current_sex <- data_projected[[reindeer_sex]][i]
+  current_sex <- data_projected[["reindeer_sex"]][i]
   marker_color <- ifelse(current_sex %in% names(sex_colors),
                         sex_colors[current_sex],
                         "#95a5a6")
@@ -233,9 +233,9 @@ label_text <- lapply(1:nrow(data_projected), function(i) {
        </div>
        <div style='padding: 6px; border: 1px solid #ddd; border-top: none;
                    border-radius: 0 0 3px 3px; background-color: #f9f9f9;'>
-         <b>Date: </b>", data_projected[[date..yyyy.mm.dd.]][i], "<br/>
-         <b>Sex: </b>", data_projected[[reindeer_sex]][i], "<br/>
-         <b>Age: </b>", data_projected[[reindeer_age]][i], "<br/>
+         <b>Date: </b>", data_projected[["date..yyyy.mm.dd."]][i], "<br/>
+         <b>Sex: </b>", data_projected[["reindeer_sex"]][i], "<br/>
+         <b>Age: </b>", data_projected[["reindeer_age"]][i], "<br/>
          <b>Coordinates:</b><br/>
          <span style='font-size: 0.9em; color: #555;'>
            ", round(lat[i], 4), "°N, ", round(lng[i], 4), "°E
@@ -256,7 +256,7 @@ sex_colors <- c(
 advanced_reindeer_markers_map <- topo_map
 
 for (i in 1:length(lng)) {
-  current_sex <- data_projected[[reindeer_sex]][i]  # Fixed to use params
+  current_sex <- data_projected[["reindeer_sex"]][i]  # Fixed to use params
   marker_color <- ifelse(current_sex %in% names(sex_colors),
                         sex_colors[current_sex],
                         "#95a5a6")
