@@ -4,36 +4,10 @@ author: "Ronja Seitz"
 date: "2025-07-03"
 output: 
   html_document:
-    self_contained: true
-    theme: default
+    self_contained: false
 
-#params:
-#  point_data:
-#    label: "Input points:"
-#    value: "data/BIG_faeces_loc_202406.csv"
-#    input: file
-#  northing_column:
-#    label: "Column with UTM Northing"
-#    value: "utm_northing"
-#    input: text
-#  easting_column:
-#    label: "Column with UTM Easting"
-#    value: "utm_easting"
-#    input: text
-#  date_column:
-#    label:  "Column with date of observation"
-#    value: "date..yyyy.mm.dd."
-#    input: text
-#  sex_column:
-#    label: "Column with reindeer sex"
-#    value: "reindeer_sex"
-#    input: text
-#  age_column:
-#    label: "Column with reindeer age"
-#    value: "reindeer_age"
-#    input: text
-    
 ---
+
 This R markdown script can be used to easily visualise reindeer location data with different levels of informations and effort in creating the map.
 We create interactive maps with the package leaflet (https://doi.org/10.32614/CRAN.package.leaflet).
 
@@ -50,6 +24,8 @@ This is only necessary once.
 library(sf) #work with location data like points 
 library(leaflet) #create interactive maps
 library(dplyr) #to clean data
+
+knitr::opts_chunk$set(cache = FALSE)
 ```
 
 #### **1. Create interactive maps with leaflet**
@@ -58,6 +34,7 @@ To make different layers accesible we also add the possibility to select which b
 
 ```{r}
 # Step 1. Define WMTS URLs
+
 svalbard_basemap_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Basiskart_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
 
 svalbard_satellite_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Satellitt_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Satellitt_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
@@ -96,6 +73,7 @@ topo_map <- leaflet() %>%
 
 # Step 3: Plot the map, which was defined in the previous step
 topo_map
+
 ```
 
 Add Reindeer Location Points

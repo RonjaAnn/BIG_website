@@ -1,0 +1,104 @@
+---
+title: "Creating 3D Maps with Rayshader"
+author: "Ronja Seitz"
+date: "2025-03-10"
+output: 
+  html_document:
+    self_contained: false
+
+
+---
+#### **Install required packages**
+This is only necessary once.
+
+#### **Load required packages**
+```{r setup, message=FALSE, warning=FALSE}
+library(terra)
+library(sf)
+library(rayshader)
+library(magick)
+library(elevatr)
+library(rgl)
+```
+
+```{r}
+# Load DEM from Norsk Polar institute
+dem_path <- "/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif"
+dem_raster <- rast(dem_path)
+
+# Define UTM zone and bounding box (UTM Zone 33N)
+utm_zone <- 33
+utm_crs <- paste0("+proj=utm +zone=", utm_zone, " +datum=WGS84 +units=m +no_defs")
+
+# Define bounding box for bjorndalen in UTM
+utm_bbox <- st_sfc(st_polygon(list(matrix(c(
+  505000, 8676038,
+  509000, 8676038,
+  509000, 8684990,
+  505000, 8684990,
+  505000, 8676038
+), ncol = 2, byrow = TRUE))), crs = utm_crs)
+
+# Crop DEM to bounding box
+dem_bjorndalen <- crop(dem_raster, utm_bbox)
+plot(dem_bjorndalen, main = "Digital Elevation Model of Bjørndalen", 
+     col = gray.colors(1000, start = 0, end = 1), 
+     xlab = "Easting", ylab ="Northing")
+
+writeRaster(dem_bjorndalen, "data/bjorndalen_dem.tif", overwrite = TRUE)
+
+```
+
+```{r}
+# Convert DEM to matrix
+dem_bjorndalen <- rast("data/bjorndalen_dem.tif")
+bjorndalen <- raster_to_matrix(dem_bjorndalen)
+
+# Create shaded relief
+bjorndalen_shade <- sphere_shade(bjorndalen, texture = "desert")
+
+# 2D map
+plot_map(bjorndalen_shade, 
+         title_text = "Bjørndalen Shiny\n Elevation Map",
+         title_size = 20)
+
+# 3D map (run in RStudio)
+plot_3d(bjorndalen_shade, bjorndalen, zscale = 15, fov = 60, theta = 45, phi = 45)
+```
+![A first 3D image of Bjorndalen!](img/Bjorndalen3D_dessert.png)
+
+
+```{r}
+# Load orthophoto
+orthophoto <- image_read("data/Ortophoto_Bjorndalen.tif") %>%
+  image_resize(paste0(ncol(bjorndalen), "x", nrow(bjorndalen))) %>%
+  image_data()
+
+orthophoto_rgb <- drop(as.numeric(orthophoto))
+bjorndalen_ortho_shade <- rayshader::add_overlay(bjorndalen_shade, orthophoto_rgb)
+
+# 3D map with RGB overlay
+plot_3d(bjorndalen_ortho_shade, bjorndalen, zscale = 15, fov = 60, theta = 45, phi = 45)
+```
+
+![A 3D image of Bjorndalen with orthophoto overlay!](img/Bjorndalen3D_rgb.png)
+
+```{r}
+data_points <- vect("data/BjorndalenReindeer_Points.gpkg")
+data_cropped <- crop(data_points, dem_bjorndalen)
+
+# Extract coordinates
+coords_x <- geom(data_cropped)[, c("x")]
+coords_y <- geom(data_cropped)[, c("y")]
+
+# Add 3D points
+render_points(lat = coords_y, long = coords_x,
+              heightmap = bjorndalen,
+              zscale = 15, color = "brown",
+              extent = ext(dem_bjorndalen),
+              offset = 1,
+              clear_previous = TRUE,
+              size = 5)
+```
+
+![A 3D image of Bjorndalen with orthophoto overlay!](img/Bjorndalen3D_rgb_locpoints.png)

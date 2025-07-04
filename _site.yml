@@ -3,11 +3,13 @@ name: "my-website"
 output_dir: docs
 
 navbar:
-  title: "My Website"
+  title: "Location data visualisation"
   left:
     - text: "Home"
       href: index.html
     - text: "About"
       href: about.html
-    - text: "Leaflet"
+    - text: "Leaflet Visualisation"
       href: "Vis_Location_Leaflet.html"
+    - text: "Rayshader Visualisation"
+      href: "Vis_Location_Rayshader.html"
