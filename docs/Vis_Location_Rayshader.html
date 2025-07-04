@@ -11,7 +11,7 @@
 
 <meta name="author" content="Ronja Seitz" />
 
-<meta name="date" content="2025-03-10" />
+<meta name="date" content="2025-07-04" />
 
 <title>Creating 3D Maps with Rayshader</title>
 
@@ -270,32 +270,69 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Creating 3D Maps with Rayshader</h1>
 <h4 class="author">Ronja Seitz</h4>
-<h4 class="date">2025-03-10</h4>
+<h4 class="date">2025-07-04</h4>
 
 </div>
 
 
+<div id="about-thid-tutorial" class="section level3">
+<h3><strong>About thid tutorial</strong></h3>
+<p>Here you can find a quick tutorial how to create 3D maps from a
+Digital Elevation Model (DEM). This example creates a map of Bjørndalen
+and adds point locations of reindeer to the 3D map.</p>
+<p>Keep in mind that 3D maps are a good method to visualize data,
+however they are often not scientific. So think about for which purpose
+you create this map.</p>
+<p>For more tutorials check the <a
+href="https://www.rayshader.com/">rayshader website</a> or look
+online.</p>
+<p><strong>Note:</strong> This website is only capable of automatically
+generatic 2D figures. All 3D images are screenshots. When using these
+examples in R Studio the 3D maps are interactive.</p>
 <div id="install-required-packages" class="section level4">
 <h4><strong>Install required packages</strong></h4>
-<p>This is only necessary once.</p>
+<p>This is only necessary once, when the packages have never been
+installed before.</p>
+<pre class="r"><code>#install.packages(&quot;terra&quot;)
+#install.packages(&quot;sf&quot;)
+#install.packages(&quot;rayshader&quot;)
+#install.packages(&quot;magick&quot;)
+#install.packages(&quot;tidyverse&quot;)</code></pre>
 </div>
 <div id="load-required-packages" class="section level4">
 <h4><strong>Load required packages</strong></h4>
+<p>The creation of 3D plots is an advanced way of visualising data.
+Therefore there are multiple packages need:</p>
+<ul>
+<li>terra: For working with raster data</li>
+<li>sf: For working with vector data</li>
+<li>rayshader: For visualization of elevation data in 2D and 3D</li>
+<li>magick: For working with image data</li>
+</ul>
 <pre class="r"><code>library(terra)
 library(sf)
 library(rayshader)
 library(magick)
-library(elevatr)
-library(rgl)</code></pre>
+library(tidyverse)</code></pre>
+<p>The main input data for the visulaization is a DEM, here we use the
+DEM of Svalbard provided by the Norsk Polar Institude. You can download
+it <a
+href="https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea">here</a>.</p>
+<p>We use <code>rast()</code> to load the .tif file. It is usually a
+very big file so the first thing is that we crop it to the extent that
+we need - here Bjørndalen via a bounding box.</p>
+<p>Then we create a simple figure using the base R function
+<code>plot()</code> and save the cropped raster to a new file with the
+<em>terra</em> function <code>writeRaster()</code>.</p>
 <pre class="r"><code># Load DEM from Norsk Polar institute
-dem_path &lt;- &quot;/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif&quot;
-dem_raster &lt;- rast(dem_path)
+dem_path &lt;- &quot;/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif&quot; #create a variable with the link to the DEM
+dem_raster &lt;- rast(dem_path) #load the DEM as spatial raster file into R 
 
-# Define UTM zone and bounding box (UTM Zone 33N)
+# Define coordinate system (crs) for the bounding box (UTM Zone 33N)
 utm_zone &lt;- 33
 utm_crs &lt;- paste0(&quot;+proj=utm +zone=&quot;, utm_zone, &quot; +datum=WGS84 +units=m +no_defs&quot;)
 
-# Define bounding box for bjorndalen in UTM
+# Define bounding box (all 4 corners)for bjorndalen in UTM coordinate system
 utm_bbox &lt;- st_sfc(st_polygon(list(matrix(c(
   505000, 8676038,
   509000, 8676038,
@@ -306,16 +343,26 @@ utm_bbox &lt;- st_sfc(st_polygon(list(matrix(c(
 
 # Crop DEM to bounding box
 dem_bjorndalen &lt;- crop(dem_raster, utm_bbox)
+
+#plot a simple figure of the cropped DEM in grey color scale
 plot(dem_bjorndalen, main = &quot;Digital Elevation Model of Bjørndalen&quot;, 
      col = gray.colors(1000, start = 0, end = 1), 
      xlab = &quot;Easting&quot;, ylab =&quot;Northing&quot;)</code></pre>
 <p><img src="Vis_Location_Rayshader_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<pre class="r"><code>writeRaster(dem_bjorndalen, &quot;data/bjorndalen_dem.tif&quot;, overwrite = TRUE)</code></pre>
+<pre class="r"><code>#save this cropped raster file to a folder
+writeRaster(dem_bjorndalen, &quot;data/bjorndalen_dem.tif&quot;, overwrite = TRUE)</code></pre>
+<p>To use the DEM with <em>rayshader</em> it has to be tranformed into a
+matrix (<code>raster_to_matrix()</code>). Then the rayshader function
+<code>sphere_shade()</code> is used to create a shaded relief which is
+used to plot both a 2D plot (<code>plot_map()</code>) and a 3D plot
+(<code>plot_3d()</code>).</p>
+<p>You can change the title text or play around with the scaling of the
+3D plot.</p>
 <pre class="r"><code># Convert DEM to matrix
 dem_bjorndalen &lt;- rast(&quot;data/bjorndalen_dem.tif&quot;)
 bjorndalen &lt;- raster_to_matrix(dem_bjorndalen)
 
-# Create shaded relief
+# Create shaded relief. &quot;Desert&quot; is an example but you can find more textures in the internet.
 bjorndalen_shade &lt;- sphere_shade(bjorndalen, texture = &quot;desert&quot;)
 
 # 2D map
@@ -325,35 +372,55 @@ plot_map(bjorndalen_shade,
 <p><img src="Vis_Location_Rayshader_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <pre class="r"><code># 3D map (run in RStudio)
 plot_3d(bjorndalen_shade, bjorndalen, zscale = 15, fov = 60, theta = 45, phi = 45)</code></pre>
+<p>This image is a screenshot of the 3D map created before. Use the code
+on your personal computer to create an interactive 3D map and change the
+scaling parameters.</p>
 <div class="float">
 <img src="img/Bjorndalen3D_dessert.png"
 alt="A first 3D image of Bjorndalen!" />
 <div class="figcaption">A first 3D image of Bjorndalen!</div>
 </div>
-<pre class="r"><code># Load orthophoto
-orthophoto &lt;- image_read(&quot;data/Ortophoto_Bjorndalen.tif&quot;) %&gt;%
-  image_resize(paste0(ncol(bjorndalen), &quot;x&quot;, nrow(bjorndalen))) %&gt;%
-  image_data()
+<hr />
+<p>Now we want to have an Orthophoto as overlay for the 3D image. For
+this I used the <a
+href="https://data.npolar.no/dataset/e02f479b-fbb8-4860-ab8d-c5e0bbbf559c">Satellittbildemosaikk
+av Svalbard (Sentinel2, 2020)</a> by the Norsk Polar institute and
+cropped it to the Bounding box. You can download the cropped image from
+the linked <a
+href="https://github.com/RonjaAnn/BIG_website/tree/main/data">github
+repository</a> or do the same as before, when cropping the DEM to the
+Bounding Box.</p>
+<pre class="r"><code># Load orthophoto using the magick package and preprocess the image 
+orthophoto &lt;- image_read(&quot;data/Ortophoto_Bjorndalen.tif&quot;) %&gt;% #read the image
+  image_resize(paste0(ncol(bjorndalen), &quot;x&quot;, nrow(bjorndalen))) %&gt;%  #resize to match dimensions of dem
+  image_data() #convert into 3D array with RGB channel for the use in rayshader
 
-orthophoto_rgb &lt;- drop(as.numeric(orthophoto))
-bjorndalen_ortho_shade &lt;- rayshader::add_overlay(bjorndalen_shade, orthophoto_rgb)
+orthophoto_rgb &lt;- drop(as.numeric(orthophoto)) #convert to numeric format
+
+bjorndalen_ortho_shade &lt;- rayshader::add_overlay(bjorndalen_shade, orthophoto_rgb) #create an overlay of an RGB image on top of a hillshade terrain model
 
 # 3D map with RGB overlay
 plot_3d(bjorndalen_ortho_shade, bjorndalen, zscale = 15, fov = 60, theta = 45, phi = 45)</code></pre>
-<div class="float">
-<img src="img/Bjorndalen3D_rgb.png"
-alt="A 3D image of Bjorndalen with orthophoto overlay!" />
-<div class="figcaption">A 3D image of Bjorndalen with orthophoto
-overlay!</div>
+<p>This code created a 3D figure with a RGB overlay. Try it in your own
+code to inspect it more closely!</p>
 </div>
-<pre class="r"><code>data_points &lt;- vect(&quot;data/BjorndalenReindeer_Points.gpkg&quot;)
-data_cropped &lt;- crop(data_points, dem_bjorndalen)
+</div>
+<div id="a-3d-image-of-bjorndalen-with-orthophoto-overlay"
+class="section level2">
+<h2><img src="img/Bjorndalen3D_rgb.png"
+alt="A 3D image of Bjorndalen with orthophoto overlay!" /></h2>
+<p>The final step is to visualize some reindeer locations. For this add
+points as a geopackage (.gpkg) via the <code>vect()</code> function.
+Then crop it to the extent of our area of interest (AOI)
+(<code>crop()</code>).</p>
+<pre class="r"><code>data_points &lt;- vect(&quot;data/BjorndalenReindeer_Points.gpkg&quot;) #add reindeer locations from a point file 
+data_cropped &lt;- crop(data_points, dem_bjorndalen) #crop the files to the extent that we are looking at (crop point to raster)
 
-# Extract coordinates
+# Extract coordinates because we need them as separate variables
 coords_x &lt;- geom(data_cropped)[, c(&quot;x&quot;)]
 coords_y &lt;- geom(data_cropped)[, c(&quot;y&quot;)]
 
-# Add 3D points
+# Add 3D points and render them on our 3D plot of Bjorndalen
 render_points(lat = coords_y, long = coords_x,
               heightmap = bjorndalen,
               zscale = 15, color = &quot;brown&quot;,
@@ -361,12 +428,61 @@ render_points(lat = coords_y, long = coords_x,
               offset = 1,
               clear_previous = TRUE,
               size = 5)</code></pre>
+<p>The result is a final map which shows the locations of reindeer
+observations in Bjørndalen.</p>
+<p>What do you think? Are the results plausible? Where were the most
+sightings of reindeer?</p>
 <div class="float">
 <img src="img/Bjorndalen3D_rgb_locpoints.png"
 alt="A 3D image of Bjorndalen with orthophoto overlay!" />
 <div class="figcaption">A 3D image of Bjorndalen with orthophoto
 overlay!</div>
 </div>
+<hr />
+<p>Using the function <code>sessionInfo()</code> gives insight into the
+R version, platform, packages and local settings to increase
+reproducibility and is good practice to include at the end of code.</p>
+<pre class="r"><code>sessionInfo() </code></pre>
+<pre><code>## R version 4.4.1 (2024-06-14 ucrt)
+## Platform: x86_64-w64-mingw32/x64
+## Running under: Windows 11 x64 (build 22631)
+## 
+## Matrix products: default
+## 
+## 
+## locale:
+## [1] LC_COLLATE=German_Germany.utf8  LC_CTYPE=German_Germany.utf8   
+## [3] LC_MONETARY=German_Germany.utf8 LC_NUMERIC=C                   
+## [5] LC_TIME=German_Germany.utf8    
+## 
+## time zone: Europe/Berlin
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] lubridate_1.9.4   forcats_1.0.0     stringr_1.5.1     dplyr_1.1.4      
+##  [5] purrr_1.0.2       readr_2.1.5       tidyr_1.3.1       tibble_3.2.1     
+##  [9] ggplot2_3.5.1     tidyverse_2.0.0   magick_2.8.5      rayshader_0.38.11
+## [13] sf_1.0-18         terra_1.7-83     
+## 
+## loaded via a namespace (and not attached):
+##  [1] gtable_0.3.6       xfun_0.49          bslib_0.8.0        htmlwidgets_1.6.4 
+##  [5] tzdb_0.4.0         vctrs_0.6.5        tools_4.4.1        generics_0.1.3    
+##  [9] parallel_4.4.1     rgl_1.3.17         proxy_0.4-27       highr_0.11        
+## [13] pkgconfig_2.0.3    KernSmooth_2.23-24 lifecycle_1.0.4    compiler_4.4.1    
+## [17] progress_1.2.3     munsell_0.5.1      codetools_0.2-20   htmltools_0.5.8.1 
+## [21] class_7.3-22       sass_0.4.9         yaml_2.3.10        rayimage_0.15.1   
+## [25] pillar_1.10.1      crayon_1.5.3       jquerylib_0.1.4    classInt_0.4-10   
+## [29] cachem_1.1.0       iterators_1.0.14   foreach_1.5.2      tidyselect_1.2.1  
+## [33] digest_0.6.36      stringi_1.8.4      fastmap_1.2.0      grid_4.4.1        
+## [37] colorspace_2.1-1   cli_3.6.3          magrittr_2.0.3     base64enc_0.1-3   
+## [41] e1071_1.7-16       withr_3.0.2        prettyunits_1.2.0  scales_1.3.0      
+## [45] timechange_0.3.0   rmarkdown_2.29     png_0.1-8          hms_1.1.3         
+## [49] evaluate_1.0.1     knitr_1.48         doParallel_1.0.17  rlang_1.1.4       
+## [53] Rcpp_1.0.12        glue_1.7.0         DBI_1.2.3          rstudioapi_0.17.1 
+## [57] jsonlite_1.8.8     R6_2.5.1           systemfonts_1.1.0  units_0.8-5</code></pre>
 </div>
 
 
