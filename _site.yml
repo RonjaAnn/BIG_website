@@ -7,8 +7,6 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "About"
-      href: about.html
     - text: "Leaflet Visualisation"
       href: Vis_Location_Leaflet.html
     - text: "Rayshader Visualisation"
