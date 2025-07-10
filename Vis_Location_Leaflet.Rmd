@@ -8,24 +8,31 @@ output:
 
 ---
 
+```{r setup, echo=FALSE}
+
+knitr::opts_chunk$set(cache = FALSE)
+
+```
+
+
+
 This R markdown script can be used to easily visualise reindeer location data with different levels of informations and effort in creating the map.
 We create interactive maps with the package leaflet (https://doi.org/10.32614/CRAN.package.leaflet).
 
 #### **Install required packages**
 This is only necessary once.
-```{r code to install packages}
+```{r install packages}
 # install.packages("sf")
 # install.packages("leaflet")
 # install.packages("dplyr")
 ```
 
 #### **Load required packages**
-```{r setup, message=FALSE, warning=FALSE}
+```{r load packages, message=FALSE, warning=FALSE}
 library(sf) #work with location data like points 
 library(leaflet) #create interactive maps
 library(dplyr) #to clean data
 
-knitr::opts_chunk$set(cache = FALSE)
 ```
 
 #### **1. Create interactive maps with leaflet**
