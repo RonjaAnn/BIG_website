@@ -271,9 +271,29 @@ $(document).ready(function () {
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#about-this-tutorial"
+id="toc-about-this-tutorial"><strong>About this
+tutorial</strong></a></li>
+<li><a href="#setup-packages" id="toc-setup-packages"><strong>1. Setup
+packages</strong></a></li>
+<li><a href="#load-and-crop-dem" id="toc-load-and-crop-dem"><strong>2.
+Load and crop DEM</strong></a></li>
+<li><a href="#prepare-dem-for-use-in-rayshader"
+id="toc-prepare-dem-for-use-in-rayshader"><strong>3. Prepare DEM for use
+in Rayshader</strong></a></li>
+<li><a href="#load-crop-and-overly-an-orthophoto-in-rayshader"
+id="toc-load-crop-and-overly-an-orthophoto-in-rayshader"><strong>4.
+Load, crop and overly an orthophoto in Rayshader</strong></a></li>
+<li><a href="#visualize-reindeer-locations"
+id="toc-visualize-reindeer-locations"><strong>5. Visualize reindeer
+locations</strong></a></li>
+</ul>
+</div>
 
-<div id="about-thid-tutorial" class="section level3">
-<h3><strong>About thid tutorial</strong></h3>
+<div id="about-this-tutorial" class="section level1">
+<h1><strong>About this tutorial</strong></h1>
 <p>Here you can find a quick tutorial how to create 3D maps from a
 Digital Elevation Model (DEM). This example creates a map of Bjørndalen
 and adds point locations of reindeer to the 3D map.</p>
@@ -286,8 +306,11 @@ online.</p>
 <p><strong>Note:</strong> This website is only capable of automatically
 generatic 2D figures. All 3D images are screenshots. When using these
 examples in R Studio the 3D maps are interactive.</p>
-<div id="install-required-packages" class="section level4">
-<h4><strong>Install required packages</strong></h4>
+</div>
+<div id="setup-packages" class="section level1">
+<h1><strong>1. Setup packages</strong></h1>
+<div id="install-required-packages" class="section level2">
+<h2><strong>Install required packages</strong></h2>
 <p>This is only necessary once, when the packages have never been
 installed before.</p>
 <pre class="r"><code>#install.packages(&quot;terra&quot;)
@@ -296,8 +319,8 @@ installed before.</p>
 #install.packages(&quot;magick&quot;)
 #install.packages(&quot;tidyverse&quot;)</code></pre>
 </div>
-<div id="load-required-packages" class="section level4">
-<h4><strong>Load required packages</strong></h4>
+<div id="load-required-packages" class="section level2">
+<h2><strong>Load required packages</strong></h2>
 <p>The creation of 3D plots is an advanced way of visualising data.
 Therefore there are multiple packages need:</p>
 <ul>
@@ -311,6 +334,10 @@ library(sf)
 library(rayshader)
 library(magick)
 library(tidyverse)</code></pre>
+</div>
+</div>
+<div id="load-and-crop-dem" class="section level1">
+<h1><strong>2. Load and crop DEM</strong></h1>
 <p>The main input data for the visulaization is a DEM, here we use the
 DEM of Svalbard provided by the Norsk Polar Institude. You can download
 it <a
@@ -348,6 +375,9 @@ plot(dem_bjorndalen, main = &quot;Digital Elevation Model of Bjørndalen&quot;,
 <p><img src="Vis_Location_Rayshader_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 <pre class="r"><code>#save this cropped raster file to a folder
 writeRaster(dem_bjorndalen, &quot;data/bjorndalen_dem.tif&quot;, overwrite = TRUE)</code></pre>
+</div>
+<div id="prepare-dem-for-use-in-rayshader" class="section level1">
+<h1><strong>3. Prepare DEM for use in Rayshader</strong></h1>
 <p>To use the DEM with <em>rayshader</em> it has to be tranformed into a
 matrix (<code>raster_to_matrix()</code>). Then the rayshader function
 <code>sphere_shade()</code> is used to create a shaded relief which is
@@ -377,8 +407,13 @@ scaling parameters.</p>
 alt="A first 3D image of Bjorndalen!" />
 <div class="figcaption">A first 3D image of Bjorndalen!</div>
 </div>
-<hr />
-<p>Now we want to have an Orthophoto as overlay for the 3D image. For
+<p><br></p>
+</div>
+<div id="load-crop-and-overly-an-orthophoto-in-rayshader"
+class="section level1">
+<h1><strong>4. Load, crop and overly an orthophoto in
+Rayshader</strong></h1>
+<p>Now we want to have an orthophoto as overlay for the 3D image. For
 this I used the <a
 href="https://data.npolar.no/dataset/e02f479b-fbb8-4860-ab8d-c5e0bbbf559c">Satellittbildemosaikk
 av Svalbard (Sentinel2, 2020)</a> by the Norsk Polar institute and
@@ -400,12 +435,14 @@ bjorndalen_ortho_shade &lt;- rayshader::add_overlay(bjorndalen_shade, orthophoto
 plot_3d(bjorndalen_ortho_shade, bjorndalen, zscale = 15, fov = 60, theta = 45, phi = 45)</code></pre>
 <p>This code created a 3D figure with a RGB overlay. Try it in your own
 code to inspect it more closely!</p>
-</div>
-</div>
 <div id="a-3d-image-of-bjorndalen-with-orthophoto-overlay"
 class="section level2">
 <h2><img src="img/Bjorndalen3D_rgb.png"
 alt="A 3D image of Bjorndalen with orthophoto overlay!" /></h2>
+</div>
+</div>
+<div id="visualize-reindeer-locations" class="section level1">
+<h1><strong>5. Visualize reindeer locations</strong></h1>
 <p>The final step is to visualize some reindeer locations. For this add
 points as a geopackage (.gpkg) via the <code>vect()</code> function.
 Then crop it to the extent of our area of interest (AOI)
@@ -435,6 +472,7 @@ alt="A 3D image of Bjorndalen with orthophoto overlay!" />
 <div class="figcaption">A 3D image of Bjorndalen with orthophoto
 overlay!</div>
 </div>
+<p><br></p>
 <hr />
 <p>Using the function <code>sessionInfo()</code> gives insight into the
 R version, platform, packages and local settings to increase
