@@ -5,6 +5,8 @@ date: "2025-07-10"
 output: 
   html_document:
     self_contained: false
+    toc: true
+    toc_depth: 1
 
 ---
 
@@ -14,10 +16,11 @@ knitr::opts_chunk$set(cache = FALSE)
 
 ```
 
-### **About this tutorial**
+# **About this tutorial**
 This R markdown script can be used to easily visualize reindeer location data with different levels of information and effort in creating the map. This tutorial uses the [leaflet](https://doi.org/10.32614/CRAN.package.leaflet) R package to create interactive maps.
 
-#### **Install required packages**
+# **1. Setup packages**
+## **Install required packages**
 This is only necessary once.
 ```{r install packages}
 # install.packages("sf")
@@ -25,7 +28,7 @@ This is only necessary once.
 # install.packages("dplyr")
 ```
 
-#### **Load required packages**
+## **Load required packages**
 These are the packages that are needed to create the maps.
 ```{r load packages, message=FALSE, warning=FALSE}
 library(sf) #work with location data like points 
@@ -34,7 +37,7 @@ library(dplyr) #to clean data
 
 ```
 
-#### **1. Create interactive maps with leaflet**
+# **2. Create an interactive map with leaflet**
 Commonly used base maps like Open Street Map are not optimized for Svalbard, so we first add our own base maps from the Norsk Polar institute (https://geodata.npolar.no/) as WMTS (Web Map Tile Services) to the leaflet interface.
 We also add a menu so we choose which base map we want to display in our map.
 
@@ -87,7 +90,7 @@ topo_map
 
 ```
 
-#### **2. Add points to our map**
+# **3. Add points to our map**
 The next step is to add our reindeer locations to the map. Therefore, we add a .CSV file with coordinates in the UTM system. 
 
 ```{r}
@@ -196,7 +199,7 @@ label_text <- lapply(1:nrow(data_projected), function(i) {
 
 ```
 
-#### **3. Create an advanced map with coloring of points according to sex**
+# **4. Create an advanced map with coloring of points according to sex**
 
 To visualize the characteristics of an observed reindeer we can change the colours of the points accordingly. Here we use the sex of the reindeer as an example. 
 
@@ -251,7 +254,7 @@ advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
 advanced_reindeer_markers_map
 ```
 
-#### **4. The final map**
+# **5. The final map**
 
 The following map is a combination of all our previous maps and scripts. SO then we have a map that:
 - Have different base maps that can be selected
@@ -325,6 +328,8 @@ advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
 # Output the map
 advanced_reindeer_markers_map
 ```
+
+<br>
 
 ----
 

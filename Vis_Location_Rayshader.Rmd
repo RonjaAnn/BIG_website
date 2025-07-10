@@ -5,10 +5,12 @@ date: "2025-07-04"
 output: 
   html_document:
     self_contained: false
+    toc: true
+    toc_depth: 1
 
 
 ---
-### **About thid tutorial**
+# **About this tutorial**
 Here you can find a quick tutorial how to create 3D maps from a Digital Elevation Model (DEM). This example creates a map of Bjørndalen and adds point locations of reindeer to the 3D map.
 
 Keep in mind that 3D maps are a good method to visualize data, however they are often not scientific. So think about for which purpose you create this map.
@@ -17,7 +19,8 @@ For more tutorials check the [rayshader website](https://www.rayshader.com/) or 
 
 **Note:** This website is only capable of automatically generatic 2D figures. All 3D images are screenshots. When using these examples in R Studio the 3D maps are interactive.
 
-#### **Install required packages**
+# **1. Setup packages**
+## **Install required packages**
 This is only necessary once, when the packages have never been installed before.
 ```{r install packages, message=FALSE, warning=FALSE}
 #install.packages("terra")
@@ -28,7 +31,7 @@ This is only necessary once, when the packages have never been installed before.
 ```
 
 
-#### **Load required packages**
+## **Load required packages**
 The creation of 3D plots is an advanced way of visualising data. Therefore there are multiple packages need:
 
 - terra: For working with raster data
@@ -44,6 +47,7 @@ library(magick)
 library(tidyverse)
 ```
 
+# **2. Load and crop DEM**
 The main input data for the visulaization is a DEM, here we use the DEM of Svalbard provided by the Norsk Polar Institude. You can download it [here](https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea).
 
 We use `rast()` to load the .tif file. It is usually a very big file so the first thing is that we crop it to the extent that we need - here Bjørndalen via a bounding box. 
@@ -81,6 +85,7 @@ writeRaster(dem_bjorndalen, "data/bjorndalen_dem.tif", overwrite = TRUE)
 
 ```
 
+# **3. Prepare DEM for use in Rayshader**
 To use the DEM with *rayshader* it has to be tranformed into a matrix (`raster_to_matrix()`). Then the rayshader function `sphere_shade()` is used to create a shaded relief which is used to plot both a 2D plot (`plot_map()`) and a 3D plot (`plot_3d()`).
 
 You can change the title text or play around with the scaling of the 3D plot.
@@ -105,9 +110,11 @@ This image is a screenshot of the 3D map created before. Use the code on your pe
 
 ![A first 3D image of Bjorndalen!](img/Bjorndalen3D_dessert.png)
 
-----
+<br>
 
-Now we want to have an Orthophoto as overlay for the 3D image. For this I used the [Satellittbildemosaikk av Svalbard (Sentinel2, 2020)](https://data.npolar.no/dataset/e02f479b-fbb8-4860-ab8d-c5e0bbbf559c) by the Norsk Polar institute and cropped it to the Bounding box. You can download the cropped image from the linked [github repository](https://github.com/RonjaAnn/BIG_website/tree/main/data) or do the same as before, when cropping the DEM to the Bounding Box.
+# **4. Load, crop and overly an orthophoto in Rayshader**
+
+Now we want to have an orthophoto as overlay for the 3D image. For this I used the [Satellittbildemosaikk av Svalbard (Sentinel2, 2020)](https://data.npolar.no/dataset/e02f479b-fbb8-4860-ab8d-c5e0bbbf559c) by the Norsk Polar institute and cropped it to the Bounding box. You can download the cropped image from the linked [github repository](https://github.com/RonjaAnn/BIG_website/tree/main/data) or do the same as before, when cropping the DEM to the Bounding Box.
 
 ```{r}
 # Load orthophoto using the magick package and preprocess the image 
@@ -127,7 +134,7 @@ This code created a 3D figure with a RGB overlay. Try it in your own code to ins
 
 ![A 3D image of Bjorndalen with orthophoto overlay!](img/Bjorndalen3D_rgb.png)
 ----
-
+# **5. Visualize reindeer locations**
 The final step is to visualize some reindeer locations. For this add points as a geopackage (.gpkg) via the `vect()` function. Then crop it to the extent of our area of interest (AOI) (`crop()`).
 
 ```{r}
@@ -153,6 +160,8 @@ The result is a final map which shows the locations of reindeer observations in 
 What do you think? Are the results plausible? Where were the most sightings of reindeer?
 
 ![A 3D image of Bjorndalen with orthophoto overlay!](img/Bjorndalen3D_rgb_locpoints.png)
+
+<br>
 
 ----
 
