@@ -156,7 +156,7 @@ What do you think? Are the results plausible? Where were the most sightings of r
 
 ----
 
-Using the function `sessionInfo()` gives insight into the R version, platform, packages and local settings to increase reproducibility and is good practice to include at the end of code.
+Using the function `sessionInfo()` gives insight into the R version, platform, packages and local settings to increase reproducibility and is good practice to include at the end of scripts.
 ```{r Session Info} 
 sessionInfo() 
 ```

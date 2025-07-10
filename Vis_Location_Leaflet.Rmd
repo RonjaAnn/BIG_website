@@ -1,53 +1,63 @@
 ---
 title: "Creating Interactive Maps with Leaflet"
 author: "Ronja Seitz"
-date: "2025-07-03"
+date: "2025-07-10"
 output: 
   html_document:
     self_contained: false
 
 ---
 
-This R markdown script can be used to easily visualise reindeer location data with different levels of informations and effort in creating the map.
-We create interactive maps with the package leaflet (https://doi.org/10.32614/CRAN.package.leaflet).
+```{r setup, echo=FALSE}
+
+knitr::opts_chunk$set(cache = FALSE)
+
+```
+
+### **About this tutorial**
+This R markdown script can be used to easily visualize reindeer location data with different levels of information and effort in creating the map. This tutorial uses the [leaflet](https://doi.org/10.32614/CRAN.package.leaflet) R package to create interactive maps.
 
 #### **Install required packages**
 This is only necessary once.
-```{r code to install packages}
+```{r install packages}
 # install.packages("sf")
 # install.packages("leaflet")
 # install.packages("dplyr")
 ```
 
 #### **Load required packages**
-```{r setup, message=FALSE, warning=FALSE}
+These are the packages that are needed to create the maps.
+```{r load packages, message=FALSE, warning=FALSE}
 library(sf) #work with location data like points 
 library(leaflet) #create interactive maps
 library(dplyr) #to clean data
 
-knitr::opts_chunk$set(cache = FALSE)
 ```
 
 #### **1. Create interactive maps with leaflet**
-Because commonly used base maps like Open Street Map are not optimized for Svalbard we first add base maps from the Norsk Polar institute (https://geodata.npolar.no/) as WMTS (Web Map Tile Services) to the leaflet interface.
-To make different layers accesible we also add the possibility to select which basemap to show.
+Commonly used base maps like Open Street Map are not optimized for Svalbard, so we first add our own base maps from the Norsk Polar institute (https://geodata.npolar.no/) as WMTS (Web Map Tile Services) to the leaflet interface.
+We also add a menu so we choose which base map we want to display in our map.
+
+Tip: You can find more WMTS layers freely available online!
 
 ```{r}
-# Step 1. Define WMTS URLs
+# Define WMTS URLs
 
 svalbard_basemap_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Basiskart_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
 
 svalbard_satellite_wmts <- "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Satellitt_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Satellitt_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng"
 
-# Step 2. Create Leaflet map with multiple basemaps and overlays
+# Create Leaflet map with multiple basemaps and overlays
 topo_map <- leaflet() %>%
-  setView(lng = 15, lat = 78, zoom = 5) %>%  # Center on Svalbard
+  setView(lng = 15, lat = 78, zoom = 5) %>%  # Center the initial view on Svalbard
   
-  # Add basemap options
+  # Add basemap options. 
+  #These options are already included in the leaflet package
   addProviderTiles(providers$Esri.WorldImagery, group = "Esri Satellite") %>%
   addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Light") %>%
   
+  # Now we add our own basemaps that we previously defined
   # Add the Svalbard topogrpahic Basemap WMTS layer
   addWMSTiles(
     baseUrl = svalbard_basemap_wmts,
@@ -64,6 +74,7 @@ topo_map <- leaflet() %>%
     group = "Svalbard Satellite"
   ) %>%
   
+  # Here we add the menu
   # Add layer control to switch between base layers and overlays
   addLayersControl(
     baseGroups = c("Esri Satellite", "OpenStreetMap", "CartoDB Light"),
@@ -71,17 +82,24 @@ topo_map <- leaflet() %>%
     options = layersControlOptions(collapsed = FALSE)
   )
 
-# Step 3: Plot the map, which was defined in the previous step
+# Finally we plot the map, which was defined in the previous step
 topo_map
 
 ```
 
-Add Reindeer Location Points
+#### **2. Add points to our map**
+The next step is to add our reindeer locations to the map. Therefore, we add a .CSV file with coordinates in the UTM system. 
+
 ```{r}
-# Step 1: Read the CSV file with the GPS data into R
+# Read the CSV file with the GPS data into R
 data <- read.csv("data/BIG_faeces_loc_202406.csv")
 
-# Step 2: Clean up the UTM coordinates using parameter column names
+```
+
+Not all the coordinates were in the right number format so we filter them by the range of UTM coordinates that are possible.
+
+```{r}
+# Clean up the UTM coordinates using parameter column names
 valid_range <- list(
   easting = c(400000, 900000),
   northing = c(6500000, 9500000)
@@ -97,20 +115,35 @@ data_clean <- data %>%
     utm_northing <= valid_range$northing[2]
   )
 
-# Step 3: Create an sf object with UTM coordinates (EPSG:25833)
+```
+
+Then we extract all the coordinates and create a sf object.
+UTM coordinates do not work in leaflet so we have to project to a geographic coordinate system, here WGS84.
+```{r}
+# Create an sf object with UTM coordinates (EPSG:25833)
 data_sf <- st_as_sf(data_clean, coords = c("utm_easting", "utm_northing"), crs = 25833)
 
-# Step 4: Reproject the coordinates to EPSG:4326 for use in leaflet
+# Reproject the coordinates to EPSG:4326 for use in leaflet
 data_projected <- st_transform(data_sf, crs = 4326)
+```
 
-# Step 5: Extract the longitude and latitude
+Adding the points to leaflet is not straight forward. First we have to extract both the longitude and latitude and save it in their own variable. 
+
+Then we add the points via a loop.
+
+You can play around with the parameters in the for loop to change e.g. colors, size, opacity etc. This function can also be used to add single locations to the map if you replace the `lng = lng[i]` and `lat = lat[i]` with geographic coordinates.
+
+The `popup = ` adds a popup window when you click on the map. The *Infos* have to fit to the headers of the input data. Double check this if you have any issues. You can check it in R with the function `names(data_projected)`.
+
+```{r}
+# Extract the longitude and latitude
 lng <- st_coordinates(data_projected)[, 1]
 lat <- st_coordinates(data_projected)[, 2]
 
-# Step 6: Create a copy of the base map
+# Create a copy of the base map
 reindeer_map <- topo_map
 
-# Step 7: Add markers to the Leaflet map
+# Add markers to the Leaflet map
 for (i in 1:length(lng)) {
   reindeer_map <- reindeer_map %>%
     addCircleMarkers(
@@ -133,6 +166,11 @@ for (i in 1:length(lng)) {
 
 # Step 8: Plot the map
 reindeer_map
+```
+
+
+To make the the labels look even nicer you can integrate some HTML/CSS code. You can play around which parameters you can change and look for sections that are based on the headings !
+```{r}
 
 # Create stylish labels with HTML/CSS
 label_text <- lapply(1:nrow(data_projected), function(i) {
@@ -144,7 +182,7 @@ label_text <- lapply(1:nrow(data_projected), function(i) {
        </div>
        <div style='padding: 6px; border: 1px solid #ddd; border-top: none;
                    border-radius: 0 0 3px 3px; background-color: #f9f9f9;'>
-         <b>Date: </b>", data_projected[["date..yyyy.mm.dd."]][i], "<br/>
+         <b>Date: </b>", data_projected[["date..yyyy.mm.dd."]][i], "<br/> 
          <b>Sex: </b>", data_projected[["reindeer_sex"]][i], "<br/>
          <b>Age: </b>", data_projected[["reindeer_age"]][i], "<br/>
          <b>Coordinates:</b><br/>
@@ -156,16 +194,29 @@ label_text <- lapply(1:nrow(data_projected), function(i) {
   ))
 })
 
+```
+
+#### **3. Create an advanced map with coloring of points according to sex**
+
+To visualize the characteristics of an observed reindeer we can change the colours of the points accordingly. Here we use the sex of the reindeer as an example. 
+
+You can always change the colors or what it should display. Keep the 
+
+```{r}
+
+advanced_reindeer_markers_map <- topo_map
+
 # Define fixed colors for each sex
 sex_colors <- c(
   "male" = "green",
   "female" = "yellow",
   "unknown" = "#95a5a6"
 )
+```
 
-# Create advanced map with sex-based coloring
-advanced_reindeer_markers_map <- topo_map
-
+The following section adds the points in the for loop but this time it checks the sex column for the point it is producing. Then it compares it to the colors that we defined.
+```{r}
+#
 for (i in 1:length(lng)) {
   current_sex <- data_projected[["reindeer_sex"]][i]
   marker_color <- ifelse(current_sex %in% names(sex_colors),
@@ -199,6 +250,14 @@ advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
 # Output the map
 advanced_reindeer_markers_map
 ```
+
+#### **4. The final map**
+
+The following map is a combination of all our previous maps and scripts. SO then we have a map that:
+- Have different base maps that can be selected
+- Shows the location of the observed reindeer
+- Has a nice popup window which gives information about the reindeer
+- Colored points that indicate the sex of the reindeer and a legend explaing the coloring
 
 ```{r}
 # Create stylish labels with HTML/CSS
@@ -267,3 +326,9 @@ advanced_reindeer_markers_map <- advanced_reindeer_markers_map %>%
 advanced_reindeer_markers_map
 ```
 
+----
+
+Using the function `sessionInfo()` gives insight into the R version, platform, packages and local settings to increase reproducibility and is good practice to include at the end of scripts.
+```{r Session Info} 
+sessionInfo() 
+```
