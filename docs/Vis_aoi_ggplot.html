@@ -283,12 +283,12 @@ tutorial</strong></a></li>
 <li><a href="#setup-packages" id="toc-setup-packages"><strong>1. Setup
 packages</strong></a></li>
 <li><a href="#download-and-load-dem"
-id="toc-download-and-load-dem"><strong>1. Download and load
+id="toc-download-and-load-dem"><strong>2. Download and load
 DEM</strong></a></li>
-<li><a href="#create-aoi-layer" id="toc-create-aoi-layer"><strong>2.
+<li><a href="#create-aoi-layer" id="toc-create-aoi-layer"><strong>3.
 Create aoi layer</strong></a></li>
 <li><a href="#create-a-map-of-the-aoi-on-svalbard"
-id="toc-create-a-map-of-the-aoi-on-svalbard"><strong>3. Create a map of
+id="toc-create-a-map-of-the-aoi-on-svalbard"><strong>4. Create a map of
 the AOI on Svalbard</strong></a></li>
 </ul>
 </div>
@@ -296,7 +296,8 @@ the AOI on Svalbard</strong></a></li>
 <div id="about-this-tutorial" class="section level1">
 <h1><strong>About this tutorial</strong></h1>
 <p>Here you can find a quick tutorial how to create an overview map of
-an aoi on Svalbard with a Digital Elevation Model (DEM) as basemap.</p>
+an Area of Interst (AOI) on Svalbard with a Digital Elevation Model
+(DEM) as basemap.</p>
 <p>The final plot can be saved and used in presentations, reports
 etc.</p>
 </div>
@@ -313,14 +314,13 @@ installed before.</p>
 <div id="load-required-packages" class="section level2">
 <h2><strong>Load required packages</strong></h2>
 <p>These are the packages that are needed to create the maps</p>
-<pre class="r"><code>library(terra)
-library(sf)
-library(leaflet)
-library(ggplot2)</code></pre>
+<pre class="r"><code>library(terra) #process raster data
+library(sf) #process vector data
+library(ggplot2) #create plots</code></pre>
 </div>
 </div>
 <div id="download-and-load-dem" class="section level1">
-<h1><strong>1. Download and load DEM</strong></h1>
+<h1><strong>2. Download and load DEM</strong></h1>
 <p>A DEM is usually a large file therefore it has to be downloaded on
 you personal laptop for this tutorial. Here we use the DEM of Svalbard
 provided by the Norsk Polar institude. You can download it <a
@@ -329,14 +329,15 @@ href="https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea">here<
 dem_path &lt;- &quot;C:/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif&quot; #path to dem
 
 # load input data
-dem_raster &lt;- rast(dem_path) #read in dem using terra. Can be visualised with plot()</code></pre>
+dem_raster &lt;- rast(dem_path) #Load DEM using the Terra package.</code></pre>
 </div>
 <div id="create-aoi-layer" class="section level1">
-<h1><strong>2. Create aoi layer</strong></h1>
-<p>To indicate our aoi we create a bounding box indicating the corners
-of our area of interest (AOI). The coordinate system most commomly used
-is UTM zone 33N, so we define this first and asign it to the bounding
-box of our aoi.</p>
+<h1><strong>3. Create aoi layer</strong></h1>
+<p>For our AOI we create a bounding box indicating the corners of our
+area of interest (AOI). We have to assign a coordinate system matching
+the one of the DEM. The coordinate system most commonly used in Svalbard
+is UTM zone 33N, so we define this first and assign it to the bounding
+box of our AOI.</p>
 <pre class="r"><code># Define UTM zone and bounding box (Example: UTM Zone 33N)
 utm_zone &lt;- 33  # Change based on your location
 utm_crs &lt;- paste0(&quot;+proj=utm +zone=&quot;, utm_zone, &quot; +datum=WGS84 +units=m +no_defs&quot;)
@@ -351,33 +352,91 @@ utm_bbox &lt;- st_sfc(st_polygon(list(matrix(c(
 ), ncol = 2, byrow = TRUE))), crs = utm_crs)</code></pre>
 </div>
 <div id="create-a-map-of-the-aoi-on-svalbard" class="section level1">
-<h1><strong>3. Create a map of the AOI on Svalbard</strong></h1>
+<h1><strong>4. Create a map of the AOI on Svalbard</strong></h1>
+<p>We can first map Svalbard without the AOI.</p>
+<p>To save processing time we crop the DEM to the exact extent of
+Svalbard, as well as aggregate it so reduce the resolution by the factor
+5.</p>
+<p><strong>Note:</strong> GGplot only uses dataframes as input so we
+create a new variable with <code>as.data.frame()</code>.</p>
 <pre class="r"><code># Aggregate using mean (for continuous data)
 # Define the cropping extent (xmin, xmax, ymin, ymax)
-crop_extent &lt;- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Keep original x, modify y
+crop_extent &lt;- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Define exact extent Svalbard
 
 # Crop the raster
-r_cropped &lt;- crop(dem_raster, crop_extent)
-r_agg &lt;- aggregate(r_cropped, fact = 5, fun = mean)
+r_cropped &lt;- crop(dem_raster, crop_extent) #crop the DEM to the extent defined earlier
+r_agg &lt;- aggregate(r_cropped, fact = 5, fun = mean) #aggregate pixels of DEM to reduce resolution and decrease processing time
 dem_df &lt;- as.data.frame(r_agg, xy = T)</code></pre>
+<p>Now we plot! More infos about ggplot and plotting rasters can be
+found <a
+href="https://tmieno2.github.io/R-as-GIS-for-Economists/geom-raster.html">here</a>.
+You can change parameters like
+<code>scale_fill_viridis_c(option = "E")</code> or title and axis
+labeling.</p>
 <pre class="r"><code>gg_map_svalbard &lt;- ggplot(data = dem_df) +
   geom_raster(aes(x = x, y = y, fill = S0_DTM20)) +
   scale_fill_viridis_c(option = &quot;E&quot;) +
   theme_light() +
   theme(legend.position = &quot;right&quot;) +
   labs(
-    title = &quot;DEM&quot;,
+    title = &quot;DEM of Svalbard&quot;,
     x = &quot;Longitude&quot;,
     y = &quot;Latitude&quot;
   ) +
   coord_sf(crs = st_crs(25833))
 
 gg_map_svalbard</code></pre>
-<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-1.png" width="672" /></p>
+<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-1.png" width="672" />
+At last we add our AOI to the map that we just created and we can use
+<code>ggsave()</code> to save it as a image file.</p>
 <pre class="r"><code>gg_map_svalbard_box &lt;- gg_map_svalbard +
     geom_sf(data=utm_bbox, colour = &quot;red&quot;, fill = NA)
 
 gg_map_svalbard_box</code></pre>
+<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map%20with%20aoi-1.png" width="672" /></p>
+<pre class="r"><code>ggsave(&quot;gg_map_svalbard_box.png&quot;, plot = gg_map_svalbard_box, width = 8, height = 6, dpi = 300)</code></pre>
+<p><br></p>
+<hr />
+<p>Using the function <code>sessionInfo()</code> gives insight into the
+R version, platform, packages and local settings to increase
+reproducibility and is good practice to include at the end of
+scripts.</p>
+<pre class="r"><code>sessionInfo() </code></pre>
+<pre><code>## R version 4.4.1 (2024-06-14 ucrt)
+## Platform: x86_64-w64-mingw32/x64
+## Running under: Windows 11 x64 (build 22631)
+## 
+## Matrix products: default
+## 
+## 
+## locale:
+## [1] LC_COLLATE=German_Germany.utf8  LC_CTYPE=German_Germany.utf8   
+## [3] LC_MONETARY=German_Germany.utf8 LC_NUMERIC=C                   
+## [5] LC_TIME=German_Germany.utf8    
+## 
+## time zone: Europe/Berlin
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] ggplot2_3.5.1 sf_1.0-18     terra_1.7-83 
+## 
+## loaded via a namespace (and not attached):
+##  [1] sass_0.4.9         generics_0.1.3     class_7.3-22       KernSmooth_2.23-24
+##  [5] digest_0.6.36      magrittr_2.0.3     evaluate_1.0.1     grid_4.4.1        
+##  [9] fastmap_1.2.0      jsonlite_1.8.8     e1071_1.7-16       DBI_1.2.3         
+## [13] viridisLite_0.4.2  scales_1.3.0       codetools_0.2-20   textshaping_0.4.0 
+## [17] jquerylib_0.1.4    cli_3.6.3          rlang_1.1.4        units_0.8-5       
+## [21] munsell_0.5.1      withr_3.0.2        cachem_1.1.0       yaml_2.3.10       
+## [25] tools_4.4.1        dplyr_1.1.4        colorspace_2.1-1   vctrs_0.6.5       
+## [29] R6_2.5.1           proxy_0.4-27       lifecycle_1.0.4    classInt_0.4-10   
+## [33] ragg_1.3.3         pkgconfig_2.0.3    pillar_1.10.1      bslib_0.8.0       
+## [37] gtable_0.3.6       glue_1.7.0         Rcpp_1.0.12        systemfonts_1.1.0 
+## [41] xfun_0.49          tibble_3.2.1       tidyselect_1.2.1   highr_0.11        
+## [45] rstudioapi_0.17.1  knitr_1.48         farver_2.1.2       htmltools_0.5.8.1 
+## [49] rmarkdown_2.29     labeling_0.4.3     compiler_4.4.1</code></pre>
 </div>
 
 
