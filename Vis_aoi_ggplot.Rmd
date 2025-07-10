@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # **About this tutorial**
-Here you can find a quick tutorial how to create an overview map of an aoi on Svalbard with a Digital Elevation Model (DEM) as basemap.
+Here you can find a quick tutorial how to create an overview map of an Area of Interst (AOI) on Svalbard with a Digital Elevation Model (DEM) as basemap.
 
 The final plot can be saved and used in presentations, reports etc.
 
@@ -32,25 +32,24 @@ This is only necessary once, when the packages have never been installed before.
 ## **Load required packages**
 These are the packages that are needed to create the maps
 ```{r load packages, message=FALSE, warning=FALSE}
-library(terra)
-library(sf)
-library(leaflet)
-library(ggplot2)
+library(terra) #process raster data
+library(sf) #process vector data
+library(ggplot2) #create plots
 ```
 
-# **1. Download and load DEM**
+# **2. Download and load DEM**
 A DEM is usually a large file therefore it has to be downloaded on you personal laptop for this tutorial. Here we use the DEM of Svalbard provided by the Norsk Polar institude. You can download it [here](https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea).
+
 ```{r load data}
 # input data
 dem_path <- "C:/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif" #path to dem
 
 # load input data
-dem_raster <- rast(dem_path) #read in dem using terra. Can be visualised with plot()
-
+dem_raster <- rast(dem_path) #Load DEM using the Terra package.
 ```
 
-# **2. Create aoi layer**
-To indicate our aoi we create a bounding box indicating the corners of our area of interest (AOI). The coordinate system most commomly used is UTM zone 33N, so we define this first and asign it to the bounding box of our aoi.
+# **3. Create aoi layer**
+For our AOI we create a bounding box indicating the corners of our area of interest (AOI). We have to assign a coordinate system matching the one of the DEM. The coordinate system most commonly used in Svalbard is UTM zone 33N, so we define this first and assign it to the bounding box of our AOI.
 
 ```{r create bounding box to crop data to (here coordinates of bjorndalen)}
 # Define UTM zone and bounding box (Example: UTM Zone 33N)
@@ -67,18 +66,24 @@ utm_bbox <- st_sfc(st_polygon(list(matrix(c(
 ), ncol = 2, byrow = TRUE))), crs = utm_crs)
 ```
 
-# **3. Create a map of the AOI on Svalbard**
+# **4. Create a map of the AOI on Svalbard**
+We can first map Svalbard without the AOI. 
 
+To save processing time we crop the DEM to the exact extent of Svalbard, as well as aggregate it so reduce the resolution by the factor 5.
+
+
+**Note:** GGplot only uses dataframes as input so we create a new variable with `as.data.frame()`.
 ```{r create overview map with the extent of Bjorndalen plotted on Svalbard, results = FALSE, fig.show='hide', message=FALSE}
 # Aggregate using mean (for continuous data)
 # Define the cropping extent (xmin, xmax, ymin, ymax)
-crop_extent <- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Keep original x, modify y
+crop_extent <- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Define exact extent Svalbard
 
 # Crop the raster
-r_cropped <- crop(dem_raster, crop_extent)
-r_agg <- aggregate(r_cropped, fact = 5, fun = mean)
+r_cropped <- crop(dem_raster, crop_extent) #crop the DEM to the extent defined earlier
+r_agg <- aggregate(r_cropped, fact = 5, fun = mean) #aggregate pixels of DEM to reduce resolution and decrease processing time
 dem_df <- as.data.frame(r_agg, xy = T)
 ```
+Now we plot! More infos about ggplot and plotting rasters can be found [here](https://tmieno2.github.io/R-as-GIS-for-Economists/geom-raster.html). You can change parameters like `scale_fill_viridis_c(option = "E")` or title and axis labeling.
 
 ```{r plot map}
 gg_map_svalbard <- ggplot(data = dem_df) +
@@ -87,7 +92,7 @@ gg_map_svalbard <- ggplot(data = dem_df) +
   theme_light() +
   theme(legend.position = "right") +
   labs(
-    title = "DEM",
+    title = "DEM of Svalbard",
     x = "Longitude",
     y = "Latitude"
   ) +
@@ -95,13 +100,24 @@ gg_map_svalbard <- ggplot(data = dem_df) +
 
 gg_map_svalbard
 ```
+At last we add our AOI to the map that we just created and we can use `ggsave()` to save it as a image file.
 
-
-```{r plot map with aoi, results = FALSE, fig.show='hide', message=FALSE}
+```{r plot map with aoi, message=FALSE}
 
 gg_map_svalbard_box <- gg_map_svalbard +
     geom_sf(data=utm_bbox, colour = "red", fill = NA)
 
 gg_map_svalbard_box
 
+ggsave("gg_map_svalbard_box.png", plot = gg_map_svalbard_box, width = 8, height = 6, dpi = 300)
+
+```
+
+<br>
+
+----
+
+Using the function `sessionInfo()` gives insight into the R version, platform, packages and local settings to increase reproducibility and is good practice to include at the end of scripts.
+```{r Session Info} 
+sessionInfo() 
 ```
