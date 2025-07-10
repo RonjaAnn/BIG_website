@@ -1,5 +1,5 @@
 ---
-title: "Vis_aoi_ggplot"
+title: "Visualizing an AOI location with GGPlot"
 author: "Ronja Seitz"
 date: "2025-07-10"
 output: 
@@ -94,6 +94,10 @@ gg_map_svalbard <- ggplot(data = dem_df) +
   coord_sf(crs = st_crs(25833))
 
 gg_map_svalbard
+```
+
+
+```{r plot map with aoi, results = FALSE, fig.show='hide', message=FALSE}
 
 gg_map_svalbard_box <- gg_map_svalbard +
     geom_sf(data=utm_bbox, colour = "red", fill = NA)
