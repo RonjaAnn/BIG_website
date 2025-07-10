@@ -11,3 +11,5 @@ navbar:
       href: Vis_Location_Leaflet.html
     - text: "Rayshader Visualisation"
       href: Vis_Location_Rayshader.html
+    - text: "GGPlot AOI visualisation" 
+      href: Vis_aoi_ggplot.html

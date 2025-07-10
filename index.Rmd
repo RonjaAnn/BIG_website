@@ -5,15 +5,9 @@ title: "Simple animal location data visualization"
 This website is a collection of tutorials for the visualization of location data. It focuses on Svalbard and locations of Svalbard reindeer that were recorded during fieldwork in the valleys Adventdalen and Bjørndalen.
 
 The workflows can be adapted to different locations as well as location data. All files including rmarkdown documents are available here: [Link to GitHub repository](https://github.com/RonjaAnn/BIG_website.git).
-<<<<<<< HEAD
 
 This website was created using R Markdown (https://rmarkdown.rstudio.com/) and github pages (https://pages.github.com/).
 
-
-=======
-
-This website was created using R Markdown (https://rmarkdown.rstudio.com/) and github pages (https://pages.github.com/).
->>>>>>> 0cc02797b74180586aa15793fd86393b64ca4245
 
 
 
