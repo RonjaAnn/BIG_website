@@ -354,6 +354,7 @@ topo_map &lt;- leaflet() %&gt;%
 
 # Finally we plot the map, which was defined in the previous step
 topo_map</code></pre>
+
 <div class="leaflet html-widget html-fill-item" id="htmlwidget-77ad61fdeef30874d257" style="width:672px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-77ad61fdeef30874d257">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"setView":[[78,15],5,[]],"calls":[{"method":"addProviderTiles","args":["Esri.WorldImagery",null,"Esri Satellite",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addProviderTiles","args":["OpenStreetMap",null,"OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addProviderTiles","args":["CartoDB.Positron",null,"CartoDB Light",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addWMSTiles","args":["https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Basiskart_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng",null,"Svalbard Basemap",{"styles":"","format":"image/jpgpng","transparent":true,"version":"1.1.1","layers":"Basisdata_NP_Basiskart_Svalbard_WMTS_3857"}]},{"method":"addWMSTiles","args":["https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Satellitt_Svalbard_WMTS_3857/MapServer/WMTS/tile/1.0.0/Basisdata_NP_Satellitt_Svalbard_WMTS_3857/default/default028mm/{z}/{y}/{x}.jpgpng",null,"Svalbard Satellite",{"styles":"","format":"image/jpgpng","transparent":true,"version":"1.1.1","layers":"Basisdata_NP_Satellitt_Svalbard_WMTS_3857"}]},{"method":"addLayersControl","args":[["Esri Satellite","OpenStreetMap","CartoDB Light"],["Svalbard Basemap","Svalbard Satellite"],{"collapsed":false,"autoZIndex":true,"position":"topright"}]}]},"evals":[],"jsHooks":[]}</script>
 </div>
@@ -366,6 +367,7 @@ data &lt;- read.csv(&quot;data/BIG_faeces_loc_202406.csv&quot;)</code></pre>
 <p>Not all the coordinates were in the right number format so we filter
 them by the range of UTM coordinates that are possible.</p>
 <pre class="r"><code># Clean up the UTM coordinates using parameter column names
+
 valid_range &lt;- list(
   easting = c(400000, 900000),
   northing = c(6500000, 9500000)
@@ -435,6 +437,7 @@ reindeer_map</code></pre>
 <p>To make the the labels look even nicer you can integrate some
 HTML/CSS code. You can play around which parameters you can change and
 look for sections that are based on the headings !</p>
+
 <pre class="r"><code># Create stylish labels with HTML/CSS
 label_text &lt;- lapply(1:nrow(data_projected), function(i) {
   htmltools::HTML(paste0(
@@ -521,6 +524,7 @@ be selected - Shows the location of the observed reindeer - Has a nice
 popup window which gives information about the reindeer - Colored points
 that indicate the sex of the reindeer and a legend explaing the
 coloring</p>
+
 <pre class="r"><code># Create stylish labels with HTML/CSS
 label_text &lt;- lapply(1:nrow(data_projected), function(i) {
   htmltools::HTML(paste0(
@@ -629,6 +633,7 @@ scripts.</p>
 ## [34] pillar_1.10.1           magrittr_2.0.3          bslib_0.8.0            
 ## [37] tools_4.4.1             proxy_0.4-27            units_0.8-5            
 ## [40] cachem_1.1.0</code></pre>
+
 </div>
 
 
