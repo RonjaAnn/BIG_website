@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-07-10" />
 
-<title>Vis_aoi_ggplot</title>
+<title>Visualizing an AOI location with GGPlot</title>
 
 <script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -268,7 +268,8 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Vis_aoi_ggplot</h1>
+<h1 class="title toc-ignore">Visualizing an AOI location with
+GGPlot</h1>
 <h4 class="author">Ronja Seitz</h4>
 <h4 class="date">2025-07-10</h4>
 
@@ -374,11 +375,9 @@ dem_df &lt;- as.data.frame(r_agg, xy = T)</code></pre>
 gg_map_svalbard</code></pre>
 <p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-1.png" width="672" /></p>
 <pre class="r"><code>gg_map_svalbard_box &lt;- gg_map_svalbard +
-    geom_sf(data=utm_bbox, colour = &quot;red&quot;, fill = NA)</code></pre>
-<pre><code>## Coordinate system already present. Adding new coordinate system, which will
-## replace the existing one.</code></pre>
-<pre class="r"><code>gg_map_svalbard_box</code></pre>
-<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-2.png" width="672" /></p>
+    geom_sf(data=utm_bbox, colour = &quot;red&quot;, fill = NA)
+
+gg_map_svalbard_box</code></pre>
 </div>
 
 
