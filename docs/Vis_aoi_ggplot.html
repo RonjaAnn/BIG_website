@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Ronja Seitz" />
+
+<meta name="date" content="2025-07-10" />
+
+<title>Vis_aoi_ggplot</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Location data visualisation</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="Vis_Location_Leaflet.html">Leaflet Visualisation</a>
+</li>
+<li>
+  <a href="Vis_Location_Rayshader.html">Rayshader Visualisation</a>
+</li>
+<li>
+  <a href="Vis_aoi_ggplot.html">GGPlot AOI visualisation</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Vis_aoi_ggplot</h1>
+<h4 class="author">Ronja Seitz</h4>
+<h4 class="date">2025-07-10</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#about-this-tutorial"
+id="toc-about-this-tutorial"><strong>About this
+tutorial</strong></a></li>
+<li><a href="#setup-packages" id="toc-setup-packages"><strong>1. Setup
+packages</strong></a></li>
+<li><a href="#download-and-load-dem"
+id="toc-download-and-load-dem"><strong>1. Download and load
+DEM</strong></a></li>
+<li><a href="#create-aoi-layer" id="toc-create-aoi-layer"><strong>2.
+Create aoi layer</strong></a></li>
+<li><a href="#create-a-map-of-the-aoi-on-svalbard"
+id="toc-create-a-map-of-the-aoi-on-svalbard"><strong>3. Create a map of
+the AOI on Svalbard</strong></a></li>
+</ul>
+</div>
+
+<div id="about-this-tutorial" class="section level1">
+<h1><strong>About this tutorial</strong></h1>
+<p>Here you can find a quick tutorial how to create an overview map of
+an aoi on Svalbard with a Digital Elevation Model (DEM) as basemap.</p>
+<p>The final plot can be saved and used in presentations, reports
+etc.</p>
+</div>
+<div id="setup-packages" class="section level1">
+<h1><strong>1. Setup packages</strong></h1>
+<div id="install-required-packages" class="section level2">
+<h2><strong>Install required packages</strong></h2>
+<p>This is only necessary once, when the packages have never been
+installed before.</p>
+<pre class="r"><code>#install.packages(&quot;terra&quot;)
+#install.packages(&quot;sf&quot;)
+#install.packages(&quot;ggplot2&quot;)</code></pre>
+</div>
+<div id="load-required-packages" class="section level2">
+<h2><strong>Load required packages</strong></h2>
+<p>These are the packages that are needed to create the maps</p>
+<pre class="r"><code>library(terra)
+library(sf)
+library(leaflet)
+library(ggplot2)</code></pre>
+</div>
+</div>
+<div id="download-and-load-dem" class="section level1">
+<h1><strong>1. Download and load DEM</strong></h1>
+<p>A DEM is usually a large file therefore it has to be downloaded on
+you personal laptop for this tutorial. Here we use the DEM of Svalbard
+provided by the Norsk Polar institude. You can download it <a
+href="https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea">here</a>.</p>
+<pre class="r"><code># input data
+dem_path &lt;- &quot;C:/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif&quot; #path to dem
+
+# load input data
+dem_raster &lt;- rast(dem_path) #read in dem using terra. Can be visualised with plot()</code></pre>
+</div>
+<div id="create-aoi-layer" class="section level1">
+<h1><strong>2. Create aoi layer</strong></h1>
+<p>To indicate our aoi we create a bounding box indicating the corners
+of our area of interest (AOI). The coordinate system most commomly used
+is UTM zone 33N, so we define this first and asign it to the bounding
+box of our aoi.</p>
+<pre class="r"><code># Define UTM zone and bounding box (Example: UTM Zone 33N)
+utm_zone &lt;- 33  # Change based on your location
+utm_crs &lt;- paste0(&quot;+proj=utm +zone=&quot;, utm_zone, &quot; +datum=WGS84 +units=m +no_defs&quot;)
+
+# Define bounding box for bjorndalen in UTM (Easting, Northing) 
+utm_bbox &lt;- st_sfc(st_polygon(list(matrix(c(
+  505000 , 8676038,  # Bottom-left (E, N)
+  509000 , 8676038,  # Bottom-right (E, N)
+  509000 , 8684990,  # Top-right (E, N)
+  505000 , 8684990, # Top-left (E, N)
+  505000 , 8676038  #close polygon
+), ncol = 2, byrow = TRUE))), crs = utm_crs)</code></pre>
+</div>
+<div id="create-a-map-of-the-aoi-on-svalbard" class="section level1">
+<h1><strong>3. Create a map of the AOI on Svalbard</strong></h1>
+<pre class="r"><code># Aggregate using mean (for continuous data)
+# Define the cropping extent (xmin, xmax, ymin, ymax)
+crop_extent &lt;- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Keep original x, modify y
+
+# Crop the raster
+r_cropped &lt;- crop(dem_raster, crop_extent)
+r_agg &lt;- aggregate(r_cropped, fact = 5, fun = mean)
+dem_df &lt;- as.data.frame(r_agg, xy = T)</code></pre>
+<pre class="r"><code>gg_map_svalbard &lt;- ggplot(data = dem_df) +
+  geom_raster(aes(x = x, y = y, fill = S0_DTM20)) +
+  scale_fill_viridis_c(option = &quot;E&quot;) +
+  theme_light() +
+  theme(legend.position = &quot;right&quot;) +
+  labs(
+    title = &quot;DEM&quot;,
+    x = &quot;Longitude&quot;,
+    y = &quot;Latitude&quot;
+  ) +
+  coord_sf(crs = st_crs(25833))
+
+gg_map_svalbard</code></pre>
+<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-1.png" width="672" /></p>
+<pre class="r"><code>gg_map_svalbard_box &lt;- gg_map_svalbard +
+    geom_sf(data=utm_bbox, colour = &quot;red&quot;, fill = NA)</code></pre>
+<pre><code>## Coordinate system already present. Adding new coordinate system, which will
+## replace the existing one.</code></pre>
+<pre class="r"><code>gg_map_svalbard_box</code></pre>
+<p><img src="Vis_aoi_ggplot_files/figure-html/plot%20map-2.png" width="672" /></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
