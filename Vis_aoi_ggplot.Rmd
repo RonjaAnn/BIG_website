@@ -1,0 +1,103 @@
+---
+title: "Vis_aoi_ggplot"
+author: "Ronja Seitz"
+date: "2025-07-10"
+output: 
+  html_document:
+    self_contained: false
+    toc: true
+    toc_depth: 1
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **About this tutorial**
+Here you can find a quick tutorial how to create an overview map of an aoi on Svalbard with a Digital Elevation Model (DEM) as basemap.
+
+The final plot can be saved and used in presentations, reports etc.
+
+# **1. Setup packages**
+## **Install required packages**
+This is only necessary once, when the packages have never been installed before.
+
+```{r install packages, message=FALSE, warning=FALSE}
+#install.packages("terra")
+#install.packages("sf")
+#install.packages("ggplot2")
+```
+
+## **Load required packages**
+These are the packages that are needed to create the maps
+```{r load packages, message=FALSE, warning=FALSE}
+library(terra)
+library(sf)
+library(leaflet)
+library(ggplot2)
+```
+
+# **1. Download and load DEM**
+A DEM is usually a large file therefore it has to be downloaded on you personal laptop for this tutorial. Here we use the DEM of Svalbard provided by the Norsk Polar institude. You can download it [here](https://data.npolar.no/dataset/dce53a47-c726-4845-85c3-a65b46fe2fea).
+```{r load data}
+# input data
+dem_path <- "C:/Users/ronja/Documents/EAGLE/Svalbard/Data/Basemap/NP_S0_DTM20/S0_DTM20.tif" #path to dem
+
+# load input data
+dem_raster <- rast(dem_path) #read in dem using terra. Can be visualised with plot()
+
+```
+
+# **2. Create aoi layer**
+To indicate our aoi we create a bounding box indicating the corners of our area of interest (AOI). The coordinate system most commomly used is UTM zone 33N, so we define this first and asign it to the bounding box of our aoi.
+
+```{r create bounding box to crop data to (here coordinates of bjorndalen)}
+# Define UTM zone and bounding box (Example: UTM Zone 33N)
+utm_zone <- 33  # Change based on your location
+utm_crs <- paste0("+proj=utm +zone=", utm_zone, " +datum=WGS84 +units=m +no_defs")
+
+# Define bounding box for bjorndalen in UTM (Easting, Northing) 
+utm_bbox <- st_sfc(st_polygon(list(matrix(c(
+  505000 , 8676038,  # Bottom-left (E, N)
+  509000 , 8676038,  # Bottom-right (E, N)
+  509000 , 8684990,  # Top-right (E, N)
+  505000 , 8684990, # Top-left (E, N)
+  505000 , 8676038  #close polygon
+), ncol = 2, byrow = TRUE))), crs = utm_crs)
+```
+
+# **3. Create a map of the AOI on Svalbard**
+
+```{r create overview map with the extent of Bjorndalen plotted on Svalbard, results = FALSE, fig.show='hide', message=FALSE}
+# Aggregate using mean (for continuous data)
+# Define the cropping extent (xmin, xmax, ymin, ymax)
+crop_extent <- ext(xmin(dem_raster), 775254 , 8473192, ymax(dem_raster))  # Keep original x, modify y
+
+# Crop the raster
+r_cropped <- crop(dem_raster, crop_extent)
+r_agg <- aggregate(r_cropped, fact = 5, fun = mean)
+dem_df <- as.data.frame(r_agg, xy = T)
+```
+
+```{r plot map}
+gg_map_svalbard <- ggplot(data = dem_df) +
+  geom_raster(aes(x = x, y = y, fill = S0_DTM20)) +
+  scale_fill_viridis_c(option = "E") +
+  theme_light() +
+  theme(legend.position = "right") +
+  labs(
+    title = "DEM",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  coord_sf(crs = st_crs(25833))
+
+gg_map_svalbard
+
+gg_map_svalbard_box <- gg_map_svalbard +
+    geom_sf(data=utm_bbox, colour = "red", fill = NA)
+
+gg_map_svalbard_box
+
+```
