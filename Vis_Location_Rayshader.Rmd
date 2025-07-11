@@ -148,7 +148,7 @@ coords_y <- geom(data_cropped)[, c("y")]
 # Add 3D points and render them on our 3D plot of Bjorndalen
 render_points(lat = coords_y, long = coords_x,
               heightmap = bjorndalen,
-              zscale = 15, color = "brown",
+              zscale = 15, color = "yellow",
               extent = ext(dem_bjorndalen),
               offset = 1,
               clear_previous = TRUE,
